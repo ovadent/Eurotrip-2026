@@ -1,0 +1,1412 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<title>Euro Trip 2026</title>
+<style>
+  :root {
+    --c-flight: #1a5fa8; --c-flight-bg: #e8f2ff; --c-flight-border: #90bdf0;
+    --c-hotel: #6b3fa0; --c-hotel-bg: #f3eeff; --c-hotel-border: #c9a8f0;
+    --c-food: #2e7d32; --c-food-bg: #e8f5e9; --c-food-border: #a5d6a7;
+    --c-activity: #e65100; --c-activity-bg: #fff3e0; --c-activity-border: #ffb74d;
+    --c-transport: #00695c; --c-transport-bg: #e0f2f1; --c-transport-border: #80cbc4;
+    --c-warn: #a05c00; --c-warn-bg: #fff8ee; --c-warn-border: #f5c472;
+    --c-note: #555; --c-note-bg: #f5f5f5; --c-note-border: #ddd;
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f0f0ed; margin: 0; padding: 0; color: #1a1a1a; }
+
+  /* HEADER */
+  .trip-header { background: linear-gradient(135deg, #1a3a5c, #2e6da8); color: white; padding: 20px 16px 16px; text-align: center; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 8px rgba(0,0,0,0.2); }
+  .trip-title { font-size: 18px; font-weight: 700; margin: 0 0 3px; }
+  .trip-sub { font-size: 11px; opacity: 0.85; margin: 0 0 10px; }
+
+  /* DAY TABS */
+  .day-tabs { display: flex; overflow-x: auto; gap: 6px; padding: 0 4px; scrollbar-width: none; -ms-overflow-style: none; }
+  .day-tabs::-webkit-scrollbar { display: none; }
+  .day-tab { flex-shrink: 0; background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.3); border-radius: 20px; padding: 4px 12px; font-size: 11px; font-weight: 600; color: white; cursor: pointer; white-space: nowrap; transition: all 0.2s; }
+  .day-tab.active { background: white; color: #1a3a5c; }
+
+  /* CONTENT */
+  .content { padding: 12px 12px 40px; }
+  .day-section { display: none; }
+  .day-section.active { display: block; }
+
+  /* DAY HEADER */
+  .day-header { background: white; border-radius: 12px; padding: 12px 14px; margin-bottom: 8px; box-shadow: 0 1px 4px rgba(0,0,0,0.08); }
+  .day-title { font-size: 16px; font-weight: 700; color: #1a1a1a; margin: 0 0 2px; }
+  .day-location { font-size: 12px; color: #666; margin: 0; }
+  .day-hotel { font-size: 11px; color: var(--c-hotel); margin: 6px 0 0; font-weight: 500; }
+
+  /* TIMELINE */
+  .timeline { position: relative; padding-left: 52px; }
+  .timeline::before { content: ''; position: absolute; left: 22px; top: 0; bottom: 0; width: 2px; background: #e0e0dc; border-radius: 2px; }
+
+  /* EVENT */
+  .event { position: relative; margin-bottom: 8px; }
+  .event-time { position: absolute; left: -52px; top: 10px; width: 44px; text-align: right; font-size: 11px; font-weight: 600; color: #888; line-height: 1; }
+  .event-dot { position: absolute; left: -30px; top: 12px; width: 10px; height: 10px; border-radius: 50%; background: #ccc; border: 2px solid white; box-shadow: 0 0 0 2px #ccc; z-index: 1; }
+  .event-dot.flight { background: var(--c-flight); box-shadow: 0 0 0 2px var(--c-flight); }
+  .event-dot.hotel { background: var(--c-hotel); box-shadow: 0 0 0 2px var(--c-hotel); }
+  .event-dot.food { background: var(--c-food); box-shadow: 0 0 0 2px var(--c-food); }
+  .event-dot.activity { background: var(--c-activity); box-shadow: 0 0 0 2px var(--c-activity); }
+  .event-dot.transport { background: var(--c-transport); box-shadow: 0 0 0 2px var(--c-transport); }
+  .event-dot.warn { background: var(--c-warn); box-shadow: 0 0 0 2px var(--c-warn); }
+  .event-dot.note { background: var(--c-note); box-shadow: 0 0 0 2px var(--c-note); }
+
+  .event-card { border-radius: 10px; padding: 10px 12px; font-size: 13px; line-height: 1.45; }
+  .event-card.flight { background: var(--c-flight-bg); border: 1px solid var(--c-flight-border); }
+  .event-card.hotel { background: var(--c-hotel-bg); border: 1px solid var(--c-hotel-border); }
+  .event-card.food { background: var(--c-food-bg); border: 1px solid var(--c-food-border); }
+  .event-card.activity { background: var(--c-activity-bg); border: 1px solid var(--c-activity-border); }
+  .event-card.transport { background: var(--c-transport-bg); border: 1px solid var(--c-transport-border); }
+  .event-card.warn { background: var(--c-warn-bg); border: 1px solid var(--c-warn-border); }
+  .event-card.note { background: var(--c-note-bg); border: 1px solid var(--c-note-border); }
+
+  .event-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; margin-bottom: 2px; }
+  .event-card.flight .event-label { color: var(--c-flight); }
+  .event-card.hotel .event-label { color: var(--c-hotel); }
+  .event-card.food .event-label { color: var(--c-food); }
+  .event-card.activity .event-label { color: var(--c-activity); }
+  .event-card.transport .event-label { color: var(--c-transport); }
+  .event-card.warn .event-label { color: var(--c-warn); }
+  .event-card.note .event-label { color: var(--c-note); }
+
+  .event-title { font-weight: 600; color: #1a1a1a; font-size: 13.5px; }
+  .event-detail { font-size: 12px; color: #444; margin-top: 2px; }
+  .event-conf { font-size: 11px; color: #888; margin-top: 3px; }
+
+  /* MAP LINK */
+  .map-link { display: inline-flex; align-items: center; gap: 4px; margin-top: 6px; background: white; border: 1px solid #ddd; border-radius: 20px; padding: 4px 10px; font-size: 11.5px; font-weight: 600; color: #1a5fa8; text-decoration: none; }
+  .map-link::before { content: '📍'; font-size: 11px; }
+
+  /* LEGEND */
+  .legend { display: flex; flex-wrap: wrap; gap: 6px; padding: 10px 12px; background: white; border-radius: 10px; margin-bottom: 10px; }
+  .legend-item { display: flex; align-items: center; gap: 4px; font-size: 10.5px; color: #555; }
+  .legend-dot { width: 8px; height: 8px; border-radius: 50%; }
+</style>
+</head>
+<body>
+
+<div class="trip-header">
+  <div class="trip-title">🌍 Euro Trip 2026 — Ovadia Family</div>
+  <div class="trip-sub">Jul 18 – Aug 1 · Ruben, Nilly, Victor, Annette, Elias</div>
+  <div class="day-tabs" id="dayTabs"></div>
+</div>
+
+<div class="content" id="content">
+
+  <div class="legend">
+    <div class="legend-item"><div class="legend-dot" style="background:var(--c-flight)"></div>Flight</div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--c-hotel)"></div>Hotel</div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--c-food)"></div>Food</div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--c-activity)"></div>Activity</div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--c-transport)"></div>Transport</div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--c-warn)"></div>Action needed</div>
+  </div>
+
+  <!-- DAY 1: JUL 18 -->
+  <div class="day-section" id="day-0">
+    <div class="day-header">
+      <div class="day-title">Saturday, July 18</div>
+      <div class="day-location">Dallas, TX → Frankfurt</div>
+      <div class="day-hotel">🏠 Sleeping on board AA 70</div>
+    </div>
+    <div class="timeline">
+      <div class="event">
+        <div class="event-time">1:30 PM</div>
+        <div class="event-dot activity"></div>
+        <div class="event-card activity">
+          <div class="event-label">Departure prep</div>
+          <div class="event-title">Arrive DFW Airport</div>
+          <div class="event-detail">Check in · Security · Gate · Allow 2.5 hrs before departure</div>
+          <a class="map-link" href="https://maps.app.goo.gl/DFW" target="_blank">Dallas Fort Worth Airport</a>
+        </div>
+      </div>
+      <div class="event">
+        <div class="event-time">4:10 PM</div>
+        <div class="event-dot flight"></div>
+        <div class="event-card flight">
+          <div class="event-label">Flight</div>
+          <div class="event-title">AA 70 · DFW → Frankfurt (FRA)</div>
+          <div class="event-detail">Economy · Seats 26J, 26K, 26L, 27J, 27L · Dinner + Breakfast served on board</div>
+          <div class="event-conf">Conf: GWKPMQ · Arrives Frankfurt 8:45 AM (+1)</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- DAY 2: JUL 19 -->
+  <div class="day-section" id="day-1">
+    <div class="day-header">
+      <div class="day-title">Sunday, July 19</div>
+      <div class="day-location">Frankfurt, Germany</div>
+      <div class="day-hotel">🏠 Residence Inn Frankfurt City Center · #84119091 + #84124528</div>
+    </div>
+    <div class="timeline">
+      <div class="event">
+        <div class="event-time">8:45 AM</div>
+        <div class="event-dot flight"></div>
+        <div class="event-card flight">
+          <div class="event-label">Arrival</div>
+          <div class="event-title">Land at Frankfurt Airport (FRA)</div>
+          <div class="event-detail">Immigration · Baggage claim · Terminal 1 or 2</div>
+          <a class="map-link" href="https://maps.app.goo.gl/FRA" target="_blank">Frankfurt Airport</a>
+        </div>
+      </div>
+      <div class="event">
+        <div class="event-time">9:00 AM</div>
+        <div class="event-dot food"></div>
+        <div class="event-card food">
+          <div class="event-label">Breakfast</div>
+          <div class="event-title">Grab food at Frankfurt Airport</div>
+          <div class="event-detail">Terminal 1 or 2 food court · Plenty of options while waiting for car</div>
+        </div>
+      </div>
+      <div class="event">
+        <div class="event-time">~10:30 AM</div>
+        <div class="event-dot transport"></div>
+        <div class="event-card transport">
+          <div class="event-label">Rental Car</div>
+          <div class="event-title">Pick up Volvo V60 · Frankfurt Airport</div>
+          <div class="event-detail">No rush — reservation holds for several hours after 10:30 AM</div>
+          <div class="event-conf">Conf: #39082108US2</div>
+        </div>
+      </div>
+      <div class="event">
+        <div class="event-time">11:30 AM</div>
+        <div class="event-dot activity"></div>
+        <div class="event-card activity">
+          <div class="event-label">Sightseeing</div>
+          <div class="event-title">Drive into Frankfurt</div>
+          <div class="event-detail">Check in bags at hotel if early · Explore Römerberg Old Town</div>
+          <a class="map-link" href="https://maps.app.goo.gl/Römerberg" target="_blank">Römerberg Square</a>
+        </div>
+      </div>
+      <div class="event">
+        <div class="event-time">3:00 PM</div>
+        <div class="event-dot hotel"></div>
+        <div class="event-card hotel">
+          <div class="event-label">Check-in</div>
+          <div class="event-title">Residence Inn Frankfurt City Center</div>
+          <div class="event-detail">Stiftstrasse 43 · 2 rooms · Superior Studio (City view) + Comfort Studio (Courtyard)</div>
+          <div class="event-conf">#84119091 (2A+1C) · #84124528 (2A+1C) · €602.60 · 2 nights</div>
+          <a class="map-link" href="https://maps.app.goo.gl/ResInnFrankfurt" target="_blank">Residence Inn Frankfurt</a>
+        </div>
+      </div>
+      <div class="event">
+        <div class="event-time">5:00 PM</div>
+        <div class="event-dot activity"></div>
+        <div class="event-card activity">
+          <div class="event-label">Activity</div>
+          <div class="event-title">Main River Promenade</div>
+          <div class="event-detail">Walk along the Main · Get oriented · Find a good spot for the World Cup Final screening</div>
+          <a class="map-link" href="https://maps.app.goo.gl/MainRiver" target="_blank">Main River Promenade</a>
+        </div>
+      </div>
+      <div class="event">
+        <div class="event-time">6:00 PM</div>
+        <div class="event-dot activity"></div>
+        <div class="event-card activity">
+          <div class="event-label">🏆 World Cup Final</div>
+          <div class="event-title">FIFA World Cup Final — Giant Floating Screens</div>
+          <div class="event-detail">Watch the final along the Main River · Public viewing with giant floating screens · Incredible atmosphere</div>
+          <a class="map-link" href="https://maps.app.goo.gl/MainRiverFrankfurt" target="_blank">Main River Frankfurt</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- DAY 3: JUL 20 -->
+  <div class="day-section" id="day-2">
+    <div class="day-header">
+      <div class="day-title">Monday, July 20</div>
+      <div class="day-location">Rhine Valley Scenic Drive</div>
+      <div class="day-hotel">🏠 Residence Inn Frankfurt City Center (returning for night)</div>
+    </div>
+    <div class="timeline">
+      <div class="event">
+        <div class="event-time">8:00 AM</div>
+        <div class="event-dot food"></div>
+        <div class="event-card food">
+          <div class="event-label">Breakfast</div>
+          <div class="event-title">Residence Inn Frankfurt</div>
+          <div class="event-detail">Included breakfast · Fuel up for a full day of driving</div>
+        </div>
+      </div>
+      <div class="event">
+        <div class="event-time">9:00 AM</div>
+        <div class="event-dot transport"></div>
+        <div class="event-card transport">
+          <div class="event-label">Depart</div>
+          <div class="event-title">Drive to Rhine Valley</div>
+          <div class="event-detail">~1 hr drive south to Bacharach</div>
+        </div>
+      </div>
+      <div class="event">
+        <div class="event-time">10:30 AM</div>
+        <div class="event-dot activity"></div>
+        <div class="event-card activity">
+          <div class="event-label">Rhine Village</div>
+          <div class="event-title">Bacharach</div>
+          <div class="event-detail">Medieval village · Half-timbered houses · Walk the old town walls</div>
+          <a class="map-link" href="https://maps.app.goo.gl/Bacharach" target="_blank">Bacharach</a>
+        </div>
+      </div>
+      <div class="event">
+        <div class="event-time">12:00 PM</div>
+        <div class="event-dot activity"></div>
+        <div class="event-card activity">
+          <div class="event-label">Scenic Stop</div>
+          <div class="event-title">Lorelei Rock Viewpoint</div>
+          <div class="event-detail">Iconic Rhine gorge viewpoint · Famous legend · Great photos</div>
+          <a class="map-link" href="https://maps.app.goo.gl/Lorelei" target="_blank">Lorelei Viewpoint</a>
+        </div>
+      </div>
+      <div class="event">
+        <div class="event-time">1:00 PM</div>
+        <div class="event-dot food"></div>
+        <div class="event-card food">
+          <div class="event-label">Lunch</div>
+          <div class="event-title">Riverside Lunch along the Rhine</div>
+          <div class="event-detail">Stop at any riverside restaurant along the route · Traditional German food</div>
+        </div>
+      </div>
+      <div class="event">
+        <div class="event-time">2:30 PM</div>
+        <div class="event-dot activity"></div>
+        <div class="event-card activity">
+          <div class="event-label">Castle</div>
+          <div class="event-title">Marksburg Castle</div>
+          <div class="event-detail">Only Rhine hilltop castle never destroyed · Stunning views · Guided tours available</div>
+          <a class="map-link" href="https://maps.app.goo.gl/Marksburg" target="_blank">Marksburg Castle</a>
+        </div>
+      </div>
+      <div class="event">
+        <div class="event-time">4:00 PM</div>
+        <div class="event-dot activity"></div>
+        <div class="event-card activity">
+          <div class="event-label">Activity</div>
+          <div class="event-title">Koblenz Cable Car</div>
+          <div class="event-detail">Aerial gondola over the Rhine · Views of Ehrenbreitstein Fortress · Kids will love it</div>
+          <a class="map-link" href="https://maps.app.goo.gl/9qJ7F8uJxD1B3S8j8" target="_blank">Koblenz Cable Car</a>
+        </div>
+      </div>
+      <div class="event">
+        <div class="event-time">5:30 PM</div>
+        <div class="event-dot transport"></div>
+        <div class="event-card transport">
+          <div class="event-label">Drive</div>
+          <div class="event-title">Drive back to Frankfurt (~1 hr)</div>
+          <div class="event-detail">Head back along the Rhine · Arrive Frankfurt ~6:30 PM</div>
+        </div>
+      </div>
+      <div class="event">
+        <div class="event-time">7:30 PM</div>
+        <div class="event-dot food"></div>
+        <div class="event-card food">
+          <div class="event-label">Dinner</div>
+          <div class="event-title">Apfelwein Wagner</div>
+          <div class="event-detail">Frankfurt's most famous traditional restaurant · Apple wine + Schnitzel + Handkäse · Classic Frankfurt experience</div>
+          <a class="map-link" href="https://maps.app.goo.gl/3vJwA6oY9Hn4X6uA8" target="_blank">Apfelwein Wagner</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- DAY 4: JUL 21 -->
+  <div class="day-section" id="day-3">
+    <div class="day-header">
+      <div class="day-title">Tuesday, July 21</div>
+      <div class="day-location">Frankfurt → Cologne, Germany</div>
+      <div class="day-hotel">🏠 Hyatt Regency Cologne · #57788665 + #28601793</div>
+    </div>
+    <div class="timeline">
+      <div class="event">
+        <div class="event-time">8:00 AM</div>
+        <div class="event-dot food"></div>
+        <div class="event-card food">
+          <div class="event-label">Breakfast</div>
+          <div class="event-title">Residence Inn Frankfurt</div>
+          <div class="event-detail">Included breakfast · Last morning in Frankfurt · Check out after</div>
+        </div>
+      </div>
+      <div class="event">
+        <div class="event-time">9:30 AM</div>
+        <div class="event-dot transport"></div>
+        <div class="event-card transport">
+          <div class="event-label">Check-out + Drive</div>
+          <div class="event-title">Drive Frankfurt → Cologne (~1.5 hrs)</div>
+          <div class="event-detail">Check out Residence Inn · Head northwest on A3/A4 motorway</div>
+        </div>
+      </div>
+      <div class="event">
+        <div class="event-time">11:00 AM</div>
+        <div class="event-dot hotel"></div>
+        <div class="event-card hotel">
+          <div class="event-label">Bag Drop</div>
+          <div class="event-title">Hyatt Regency Cologne — drop bags</div>
+          <div class="event-detail">Kennedy-Ufer 2A · Check-in not until 3 PM · Leave bags and explore</div>
+          <div class="event-conf">#57788665 (1K, 1A+2C) + #28601793 (2T, 2A) · Connecting rooms requested</div>
+          <a class="map-link" href="https://maps.app.goo.gl/HyattCologne" target="_blank">Hyatt Regency Cologne</a>
+        </div>
+      </div>
+      <div class="event">
+        <div class="event-time">11:30 AM</div>
+        <div class="event-dot activity"></div>
+        <div class="event-card activity">
+          <div class="event-label">Landmark</div>
+          <div class="event-title">Cologne Cathedral (Kölner Dom) + Tower Climb</div>
+          <div class="event-detail">UNESCO World Heritage · 157m tall · Optional tower climb: 533 steps · Panoramic Rhine views · Well worth it for the kids · Allow 1–1.5 hrs</div>
+          <a class="map-link" href="https://maps.app.goo.gl/rP7x1gK6V8m5N3VJ6" target="_blank">Cologne Cathedral</a>
+        </div>
+      </div>
+      <div class="event">
+        <div class="event-time">1:00 PM</div>
+        <div class="event-dot food"></div>
+        <div class="event-card food">
+          <div class="event-label">Lunch</div>
+          <div class="event-title">Lunch near the Cathedral</div>
+          <div class="event-detail">Many options around the Dom · Try local Kölsch beer area restaurants</div>
+        </div>
+      </div>
+      <div class="event">
+        <div class="event-time">2:30 PM</div>
+        <div class="event-dot activity"></div>
+        <div class="event-card activity">
+          <div class="event-label">Sightseeing</div>
+          <div class="event-title">Rhine Promenade + Hohenzollern Bridge</div>
+          <div class="event-detail">Walk along the Rhine · Love locks on the bridge · Great views of the cathedral from across the river</div>
+          <a class="map-link" href="https://maps.app.goo.gl/HohenzollernBridge" target="_blank">Hohenzollern Bridge</a>
+        </div>
+      </div>
+      <div class="event">
+        <div class="event-time">3:00 PM</div>
+        <div class="event-dot hotel"></div>
+        <div class="event-card hotel">
+          <div class="event-label">Check-in</div>
+          <div class="event-title">Hyatt Regency Cologne</div>
+          <div class="event-detail">Official check-in time · Kennedy-Ufer 2A · Rhine views · Breakfast included</div>
+        </div>
+      </div>
+      <div class="event">
+        <div class="event-time">7:30 PM</div>
+        <div class="event-dot food"></div>
+        <div class="event-card food">
+          <div class="event-label">Dinner</div>
+          <div class="event-title">Brauhaus Früh am Dom</div>
+          <div class="event-detail">Cologne's most famous brewery restaurant · Traditional Kölsch beer · Sauerbraten + Himmel und Ääd · Steps from the Cathedral</div>
+          <a class="map-link" href="https://maps.app.goo.gl/xW4Xz5xU8r5iS5fQ7" target="_blank">Brauhaus Früh am Dom</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- DAY 5: JUL 22 -->
+  <div class="day-section" id="day-4">
+    <div class="day-header">
+      <div class="day-title">Wednesday, July 22</div>
+      <div class="day-location">Cologne → Bruges, Belgium</div>
+      <div class="day-hotel">🏠 Grand Hotel Casselbergh · Conf #167711</div>
+    </div>
+    <div class="timeline">
+      <div class="event">
+        <div class="event-time">8:00 AM</div>
+        <div class="event-dot food"></div>
+        <div class="event-card food">
+          <div class="event-label">Breakfast</div>
+          <div class="event-title">Hyatt Regency Cologne</div>
+          <div class="event-detail">Included breakfast · Before checkout · Fuel up for travel day</div>
+        </div>
+      </div>
+      <div class="event">
+        <div class="event-time">9:30 AM</div>
+        <div class="event-dot transport"></div>
+        <div class="event-card transport">
+          <div class="event-label">Check-out</div>
+          <div class="event-title">Check out Hyatt Cologne · Drive to car return</div>
+          <div class="event-detail">Pack up · Head to rental car drop-off location</div>
+        </div>
+      </div>
+      <div class="event">
+        <div class="event-time">10:30 AM</div>
+        <div class="event-dot transport"></div>
+        <div class="event-card transport">
+          <div class="event-label">Car Return</div>
+          <div class="event-title">Return Volvo V60 — Cologne Downtown</div>
+          <div class="event-detail">Mathias Brueggen Str 61 · Cologne · Mon–Fri 7:30 AM–6:00 PM ✓</div>
+          <div class="event-conf">Conf: #39082108US2</div>
+          <a class="map-link" href="https://maps.app.goo.gl/CologneCarReturn" target="_blank">Cologne Car Return</a>
+        </div>
+      </div>
+      <div class="event">
+        <div class="event-time">11:15 AM</div>
+        <div class="event-dot transport"></div>
+        <div class="event-card transport">
+          <div class="event-label">Taxi</div>
+          <div class="event-title">Taxi to Köln Hauptbahnhof</div>
+          <div class="event-detail">~10 min ride · Allow extra time with 5 people + luggage</div>
+          <a class="map-link" href="https://maps.app.goo.gl/KolnHbf" target="_blank">Köln Hauptbahnhof</a>
+        </div>
+      </div>
+      <div class="event">
+        <div class="event-time">12:47 PM</div>
+        <div class="event-dot transport"></div>
+        <div class="event-card transport">
+          <div class="event-label">Train</div>
+          <div class="event-title">Köln Hbf → Aachen Hbf (RE9 10914)</div>
+          <div class="event-detail">Then 14:05 Aachen → Brussels Midi (ICE 314) · Car 25, Seats 43, 44, 51, 52, 64</div>
+          <div class="warn-line">⚠ ICE 314 at 14:05 is LOCKED — non-cancellable · Do not miss 12:47 PM Köln Hbf departure</div>
+          <div class="warn-line">⚠ Tight connections: 25 min in Aachen (1:40→2:05) and 16 min in Brussels (3:35→3:51) — monitor delays</div>
+          <div class="event-conf">📱 Tickets loaded in DB Navigator App · BH74XBU7 · Order #301092082129 · €160.10 · Then 15:51 Brussels Midi → Bruges IC 2837 · Arrive 16:49</div>
+        </div>
+      </div>
+      <div class="event">
+        <div class="event-time">4:49 PM</div>
+        <div class="event-dot hotel"></div>
+        <div class="event-card hotel">
+          <div class="event-label">Arrive + Check-in</div>
+          <div class="event-title">Grand Hotel Casselbergh</div>
+          <div class="event-detail">15th century ducal palace · Heart of historic Bruges · 2 Superior rooms · Room upgrade pending</div>
+          <div class="event-conf">Conf #167711 · Family Suite "Queen Catharina" · 2A+3C · €1,789.20 · 3 nights (Jul 22–25)</div>
+          <a class="map-link" href="https://maps.google.com/?cid=7410703686221901383" target="_blank">Grand Hotel Casselbergh</a>
+        </div>
+      </div>
+      <div class="event">
+        <div class="event-time">6:15 PM</div>
+        <div class="event-dot activity"></div>
+        <div class="event-card activity">
+          <div class="event-label">Evening Walk</div>
+          <div class="event-title">Bruges Canal Walk</div>
+          <div class="event-detail">First impressions of Bruges · Stroll the canals · Beautiful at dusk</div>
+          <a class="map-link" href="https://maps.app.goo.gl/BrugesCanal" target="_blank">Bruges Canals</a>
+        </div>
+      </div>
+      <div class="event">
+        <div class="event-time">7:30 PM</div>
+        <div class="event-dot food"></div>
+        <div class="event-card food">
+          <div class="event-label">Dinner</div>
+          <div class="event-title">Cambrinus</div>
+          <div class="event-detail">Belgian classics · Mussels · Local beers · Great first dinner in Bruges</div>
+          <a class="map-link" href="https://maps.app.goo.gl/2zj5Y2mP9R5M7m9r7" target="_blank">Cambrinus Bruges</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- DAY 6: JUL 23 -->
+  <div class="day-section" id="day-5">
+    <div class="day-header">
+      <div class="day-title">Thursday, July 23</div>
+      <div class="day-location">Bruges, Belgium</div>
+      <div class="day-hotel">🏠 Grand Hotel Casselbergh</div>
+    </div>
+    <div class="timeline">
+      <div class="event">
+        <div class="event-time">9:00 AM</div>
+        <div class="event-dot food"></div>
+        <div class="event-card food">
+          <div class="event-label">Breakfast ⭐ 4.9</div>
+          <div class="event-title">HIDE Breakfast / Lunch</div>
+          <div class="event-detail">Cordoeaniersstraat 4 · Best breakfast in Bruges · Arrive right at opening — gets busy fast</div>
+          <a class="map-link" href="https://maps.app.goo.gl/HIDE_Bruges" target="_blank">HIDE Breakfast</a>
+        </div>
+      </div>
+      <div class="event">
+        <div class="event-time">10:30 AM</div>
+        <div class="event-dot activity"></div>
+        <div class="event-card activity">
+          <div class="event-label">Walking Tour</div>
+          <div class="event-title">Markt Square + Belfry</div>
+          <div class="event-detail">Heart of Bruges · Medieval Belfry tower · Climb for panoramic views · Allow 1 hr</div>
+          <a class="map-link" href="https://maps.app.goo.gl/MarktBruges" target="_blank">Markt Square Bruges</a>
+        </div>
+      </div>
+      <div class="event">
+        <div class="event-time">11:30 AM</div>
+        <div class="event-dot activity"></div>
+        <div class="event-card activity">
+          <div class="event-label">Sightseeing</div>
+          <div class="event-title">Burg Square + Basilica of the Holy Blood</div>
+          <div class="event-detail">Medieval square · Basilica houses a relic of Christ's blood · Stunning architecture</div>
+          <a class="map-link" href="https://maps.app.goo.gl/BurgSquareBruges" target="_blank">Burg Square Bruges</a>
+        </div>
+      </div>
+      <div class="event">
+        <div class="event-time">11:15 AM</div>
+        <div class="event-dot activity"></div>
+        <div class="event-card activity">
+          <div class="event-label">Boat Tour</div>
+          <div class="event-title">Canal Boat Tour — Rozenhoedkaai</div>
+          <div class="event-detail">30 min boat ride · Best views of medieval Bruges · Kids will love it · Most scenic spot in Bruges</div>
+          <a class="map-link" href="https://maps.app.goo.gl/Rozenhoedkaai" target="_blank">Rozenhoedkaai Dock</a>
+        </div>
+      </div>
+      <div class="event">
+        <div class="event-time">12:30 PM</div>
+        <div class="event-dot food"></div>
+        <div class="event-card food">
+          <div class="event-label">Lunch</div>
+          <div class="event-title">Chez Albert</div>
+          <div class="event-detail">Famous Belgian waffles + light lunch · Great family spot</div>
+          <a class="map-link" href="https://maps.app.goo.gl/LQ5nJk8mQd8iYxwT7" target="_blank">Chez Albert Bruges</a>
+        </div>
+      </div>
+      <div class="event">
+        <div class="event-time">2:00 PM</div>
+        <div class="event-dot activity"></div>
+        <div class="event-card activity">
+          <div class="event-label">Shopping</div>
+          <div class="event-title">Chocolate + Shopping Exploration</div>
+          <div class="event-detail">The Chocolate Line · Dumon Chocolatier · Belgian chocolate tasting · Browse the medieval streets</div>
+          <a class="map-link" href="https://maps.app.goo.gl/ChocolateLineBruges" target="_blank">The Chocolate Line</a>
+        </div>
+      </div>
+      <div class="event">
+        <div class="event-time">5:30 PM</div>
+        <div class="event-dot hotel"></div>
+        <div class="event-card hotel">
+          <div class="event-label">Rest</div>
+          <div class="event-title">Return to Grand Hotel Casselbergh</div>
+          <div class="event-detail">Relax · Freshen up before dinner</div>
+        </div>
+      </div>
+      <div class="event">
+        <div class="event-time">7:30 PM</div>
+        <div class="event-dot food"></div>
+        <div class="event-card food">
+          <div class="event-label">Dinner</div>
+          <div class="event-title">De Stove</div>
+          <div class="event-detail">Excellent authentic Belgian cuisine · Intimate restaurant · One of the best in Bruges · Reserve ahead</div>
+          <a class="map-link" href="https://maps.app.goo.gl/x1m6Qw7c8n8Kf8Y79" target="_blank">De Stove Bruges</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- DAY 7: JUL 24 -->
+  <div class="day-section" id="day-6">
+    <div class="day-header">
+      <div class="day-title">Friday, July 24</div>
+      <div class="day-location">Bruges + Ghent, Belgium</div>
+      <div class="day-hotel">🏠 Grand Hotel Casselbergh</div>
+    </div>
+    <div class="timeline">
+      <div class="event">
+        <div class="event-time">8:30 AM</div>
+        <div class="event-dot food"></div>
+        <div class="event-card food">
+          <div class="event-label">Breakfast ⭐ 4.9</div>
+          <div class="event-title">Sweet l'oeuff</div>
+          <div class="event-detail">Sint-Amandsstraat 17 · Opens 8:30 AM · 10 min walk to station · Quick but excellent</div>
+          <a class="map-link" href="https://maps.app.goo.gl/SweetLoeuff" target="_blank">Sweet l'oeuff Bruges</a>
+        </div>
+      </div>
+      <div class="event">
+        <div class="event-time">9:15 AM</div>
+        <div class="event-dot transport"></div>
+        <div class="event-card transport">
+          <div class="event-label">Train</div>
+          <div class="event-title">Train Bruges → Ghent (~25 min)</div>
+          <div class="event-detail">Buy at station · No advance booking needed · Frequent service</div>
+          <a class="map-link" href="https://maps.app.goo.gl/BrugesStation" target="_blank">Bruges Train Station</a>
+        </div>
+      </div>
+      <div class="event">
+        <div class="event-time">10:00 AM</div>
+        <div class="event-dot activity"></div>
+        <div class="event-card activity">
+          <div class="event-label">Castle</div>
+          <div class="event-title">Gravensteen Castle — Ghent</div>
+          <div class="event-detail">Castle of the Counts · Medieval fortress · Excellent for kids · Great views over Ghent</div>
+          <a class="map-link" href="https://maps.app.goo.gl/GravenssteenGhent" target="_blank">Gravensteen Castle</a>
+        </div>
+      </div>
+      <div class="event">
+        <div class="event-time">11:30 AM</div>
+        <div class="event-dot activity"></div>
+        <div class="event-card activity">
+          <div class="event-label">Sightseeing</div>
+          <div class="event-title">Graslei + Korenlei + St. Bavo Cathedral</div>
+          <div class="event-detail">Most beautiful medieval waterfront in Belgium · St. Bavo houses the famous Ghent Altarpiece</div>
+          <a class="map-link" href="https://maps.app.goo.gl/GrasleiGhent" target="_blank">Graslei Ghent</a>
+        </div>
+      </div>
+      <div class="event">
+        <div class="event-time">1:00 PM</div>
+        <div class="event-dot food"></div>
+        <div class="event-card food">
+          <div class="event-label">Lunch</div>
+          <div class="event-title">Du Progres — Ghent</div>
+          <div class="event-detail">Great local spot · Belgian classics · Well located in the city center</div>
+          <a class="map-link" href="https://maps.app.goo.gl/yJYjW1U3k9q4oKXQ6" target="_blank">Du Progres Ghent</a>
+        </div>
+      </div>
+      <div class="event">
+        <div class="event-time">3:00 PM</div>
+        <div class="event-dot transport"></div>
+        <div class="event-card transport">
+          <div class="event-label">Train</div>
+          <div class="event-title">Train Ghent → Bruges (~30 min)</div>
+          <div class="event-detail">Return to Bruges · Arrive ~3:30 PM</div>
+        </div>
+      </div>
+      <div class="event">
+        <div class="event-time">6:30 PM</div>
+        <div class="event-dot activity"></div>
+        <div class="event-card activity">
+          <div class="event-label">Evening</div>
+          <div class="event-title">Relaxed Final Bruges Evening</div>
+          <div class="event-detail">Wander the canals at dusk · Last look at medieval Bruges · Pick up any final souvenirs</div>
+        </div>
+      </div>
+      <div class="event">
+        <div class="event-time">7:30 PM</div>
+        <div class="event-dot food"></div>
+        <div class="event-card food">
+          <div class="event-label">Dinner</div>
+          <div class="event-title">Poules Moules</div>
+          <div class="event-detail">Family-friendly · Belgian mussels + frites · Fun atmosphere · Great last dinner in Belgium</div>
+          <a class="map-link" href="https://maps.app.goo.gl/8i4J3x4W7V6Lr9jL8" target="_blank">Poules Moules Bruges</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- DAY 8: JUL 25 -->
+  <div class="day-section" id="day-7">
+    <div class="day-header">
+      <div class="day-title">Saturday, July 25</div>
+      <div class="day-location">Bruges → Amsterdam, Netherlands</div>
+      <div class="day-hotel">🏠 Kimpton De Witt Amsterdam · #62302177 + #62762806</div>
+    </div>
+    <div class="timeline">
+      <div class="event">
+        <div class="event-time">8:30 AM</div>
+        <div class="event-dot food"></div>
+        <div class="event-card food">
+          <div class="event-label">Breakfast ⭐ 4.8</div>
+          <div class="event-title">Boho Brunch</div>
+          <div class="event-detail">Giststraat 3 · Opens 8:30 AM · Relaxed pace — 2 full hours before train · Great coffee + açaí bowls</div>
+          <a class="map-link" href="https://maps.app.goo.gl/BohoBrunchBruges" target="_blank">Boho Brunch Bruges</a>
+        </div>
+      </div>
+      <div class="event">
+        <div class="event-time">10:00 AM</div>
+        <div class="event-dot transport"></div>
+        <div class="event-card transport">
+          <div class="event-label">Check-out + Taxi</div>
+          <div class="event-title">Check out Grand Hotel Casselbergh · Taxi to Station</div>
+          <div class="event-detail">Allow 15 min for taxi · Bruges station is ~10 min from hotel</div>
+        </div>
+      </div>
+      <div class="event">
+        <div class="event-time">10:34 AM</div>
+        <div class="event-dot transport"></div>
+        <div class="event-card transport">
+          <div class="event-label">Train</div>
+          <div class="event-title">Bruges → Brussels Midi (10:34 AM)</div>
+          <div class="event-detail">Then Brussels Midi → Amsterdam Centraal · Eurocity Direct 9543</div>
+          <div class="warn-line">⚠ Brussels→Amsterdam ticket LOCKED to Train 9543 at 11:57 AM — do NOT miss this departure</div>
+          <div class="event-conf">📱 All 5 tickets already loaded in NS International App — no printing needed · DNR: JJMJTCL</div>
+          <div class="event-conf">Ref: JJMJTCL · Tickets in NS International App · Arrive Amsterdam 2:09 PM</div>
+          <a class="map-link" href="https://maps.app.goo.gl/BrugesStation" target="_blank">Bruges Train Station</a>
+        </div>
+      </div>
+      <div class="event">
+        <div class="event-time">2:09 PM</div>
+        <div class="event-dot transport"></div>
+        <div class="event-card transport">
+          <div class="event-label">Arrive</div>
+          <div class="event-title">Amsterdam Centraal Station</div>
+          <div class="event-detail">Hotel is ~10 min walk or short taxi from Centraal</div>
+          <a class="map-link" href="https://maps.app.goo.gl/AmsterdamCentraal" target="_blank">Amsterdam Centraal</a>
+        </div>
+      </div>
+      <div class="event">
+        <div class="event-time">3:00 PM</div>
+        <div class="event-dot hotel"></div>
+        <div class="event-card hotel">
+          <div class="event-label">Check-in</div>
+          <div class="event-title">Kimpton De Witt Amsterdam</div>
+          <div class="event-detail">Nieuwezijds Voorburgwal 5 · 2 rooms · 1K (1A+1C) + 2 Doubles (1A+2C)</div>
+          <div class="event-conf">#62302177 + #62762806 · €2,666.94 · 3 nights (Jul 25–28)</div>
+          <a class="map-link" href="https://maps.app.goo.gl/KimptonDeWitt" target="_blank">Kimpton De Witt Amsterdam</a>
+        </div>
+      </div>
+      <div class="event">
+        <div class="event-time">5:30 PM</div>
+        <div class="event-dot activity"></div>
+        <div class="event-card activity">
+          <div class="event-label">Neighborhood Walk</div>
+          <div class="event-title">Jordaan District Exploration</div>
+          <div class="event-detail">Amsterdam's most charming neighborhood · Narrow streets · Canal houses · Boutique shops</div>
+          <a class="map-link" href="https://maps.app.goo.gl/JordaanAmsterdam" target="_blank">Jordaan Amsterdam</a>
+        </div>
+      </div>
+      <div class="event">
+        <div class="event-time">7:00 PM</div>
+        <div class="event-dot food"></div>
+        <div class="event-card food">
+          <div class="event-label">Dinner</div>
+          <div class="event-title">Restaurant Blauw</div>
+          <div class="event-detail">Indonesian-Dutch fusion · One of Amsterdam's best · Rich rijsttafel dishes · Completely different experience from Dutch food later in the trip · Book ahead recommended</div>
+          <a class="map-link" href="https://maps.google.com/?q=Restaurant+Blauw+Amsterdam" target="_blank">Restaurant Blauw Amsterdam</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- DAY 9: JUL 26 -->
+  <div class="day-section" id="day-8">
+    <div class="day-header">
+      <div class="day-title">Sunday, July 26</div>
+      <div class="day-location">Amsterdam, Netherlands</div>
+      <div class="day-hotel">🏠 Kimpton De Witt Amsterdam</div>
+    </div>
+    <div class="timeline">
+      <div class="event">
+        <div class="event-time">9:00 AM</div>
+        <div class="event-dot food"></div>
+        <div class="event-card food">
+          <div class="event-label">Breakfast ⭐ 4.9</div>
+          <div class="event-title">Kafenion Amsterdam</div>
+          <div class="event-detail">Bloemgracht 49, Jordaan · 5 min walk · Greek-inspired · Great coffee · Done by 9:45 AM for Anne Frank</div>
+          <a class="map-link" href="https://maps.app.goo.gl/KafenionAmsterdam" target="_blank">Kafenion Amsterdam</a>
+        </div>
+      </div>
+      <div class="event">
+        <div class="event-time">10:00 AM</div>
+        <div class="event-dot activity"></div>
+        <div class="event-card warn">
+          <div class="event-label">⚠ Book tickets mid-June</div>
+          <div class="event-title">Anne Frank House</div>
+          <div class="event-detail">Prinsengracht 263-267 · Tickets must be booked in advance · Opens ~mid-June 2026 · Museum Visit + Introductory Program recommended</div>
+          <a class="map-link" href="https://www.annefrank.org/en/" target="_blank">Anne Frank House</a>
+        </div>
+      </div>
+      <div class="event">
+        <div class="event-time">12:00 PM</div>
+        <div class="event-dot food"></div>
+        <div class="event-card food">
+          <div class="event-label">Lunch</div>
+          <div class="event-title">Lunch in the Jordaan</div>
+          <div class="event-detail">Many excellent cafés in the Jordaan neighborhood · Explore and pick your favorite</div>
+        </div>
+      </div>
+      <div class="event">
+        <div class="event-time">2:00 PM</div>
+        <div class="event-dot activity"></div>
+        <div class="event-card activity">
+          <div class="event-label">Museum</div>
+          <div class="event-title">Van Gogh Museum</div>
+          <div class="event-detail">Museumplein 6 · World's largest Van Gogh collection · Book tickets in advance · Allow 2 hrs</div>
+          <a class="map-link" href="https://maps.app.goo.gl/VanGoghMuseum" target="_blank">Van Gogh Museum</a>
+        </div>
+      </div>
+      <div class="event">
+        <div class="event-time">5:00 PM</div>
+        <div class="event-dot activity"></div>
+        <div class="event-card activity">
+          <div class="event-label">Boat Tour</div>
+          <div class="event-title">Amsterdam Canal Cruise</div>
+          <div class="event-detail">Best way to see Amsterdam · Golden hour light on the canals · Kids love it · lovers.nl recommended</div>
+          <a class="map-link" href="https://www.lovers.nl/" target="_blank">Lovers Canal Cruise</a>
+        </div>
+      </div>
+      <div class="event">
+        <div class="event-time">7:30 PM</div>
+        <div class="event-dot food"></div>
+        <div class="event-card food">
+          <div class="event-label">Dinner</div>
+          <div class="event-title">Canal-side Dinner</div>
+          <div class="event-detail">Pick a canal-side restaurant in the Jordaan or Grachtengordel · Beautiful setting after the cruise</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- DAY 10: JUL 27 -->
+  <div class="day-section" id="day-9">
+    <div class="day-header">
+      <div class="day-title">Monday, July 27</div>
+      <div class="day-location">Amsterdam, Netherlands</div>
+      <div class="day-hotel">🏠 Kimpton De Witt Amsterdam</div>
+    </div>
+    <div class="timeline">
+      <div class="event">
+        <div class="event-time">7:00 AM</div>
+        <div class="event-dot food"></div>
+        <div class="event-card food">
+          <div class="event-label">Breakfast ⭐ 4.7</div>
+          <div class="event-title">Omelegg Jordaan</div>
+          <div class="event-detail">Westerstraat 30 · Opens 7 AM · Best omelettes in Amsterdam · 8 min walk from hotel · Leisurely morning</div>
+          <a class="map-link" href="https://maps.app.goo.gl/OmeleggJordaan" target="_blank">Omelegg Jordaan</a>
+        </div>
+      </div>
+      <div class="event">
+        <div class="event-time">10:00 AM</div>
+        <div class="event-dot activity"></div>
+        <div class="event-card activity">
+          <div class="event-label">Park</div>
+          <div class="event-title">Vondelpark</div>
+          <div class="event-detail">Amsterdam's most famous park · Playgrounds · Cafés · Relaxed morning stroll · Great for kids</div>
+          <a class="map-link" href="https://maps.app.goo.gl/VondelparkAmsterdam" target="_blank">Vondelpark</a>
+        </div>
+      </div>
+      <div class="event">
+        <div class="event-time">12:30 PM</div>
+        <div class="event-dot food"></div>
+        <div class="event-card food">
+          <div class="event-label">Lunch</div>
+          <div class="event-title">Foodhallen Amsterdam</div>
+          <div class="event-detail">Indoor food market · Huge variety · Something for everyone · Great family lunch spot</div>
+          <a class="map-link" href="https://maps.app.goo.gl/FoodhallenAmsterdam" target="_blank">Foodhallen Amsterdam</a>
+        </div>
+      </div>
+      <div class="event">
+        <div class="event-time">2:00 PM</div>
+        <div class="event-dot activity"></div>
+        <div class="event-card activity">
+          <div class="event-label">Choose One</div>
+          <div class="event-title">NEMO Science Museum / Heineken Experience / Jordaan</div>
+          <div class="event-detail">NEMO: Best for kids · hands-on science · Heineken: Fun brewery tour · Jordaan: Browse shops + galleries</div>
+          <a class="map-link" href="https://maps.app.goo.gl/NEMOAmsterdam" target="_blank">NEMO Science Museum</a>
+        </div>
+      </div>
+      <div class="event">
+        <div class="event-time">5:30 PM</div>
+        <div class="event-dot activity"></div>
+        <div class="event-card activity">
+          <div class="event-label">Sunset Cruise</div>
+          <div class="event-title">Canal Cruise — Sunset Timing</div>
+          <div class="event-detail">Golden hour on the canals · Best light of the day · lovers.nl or local boats at Centraal</div>
+          <a class="map-link" href="https://www.lovers.nl/" target="_blank">Lovers Canal Cruise</a>
+        </div>
+      </div>
+      <div class="event">
+        <div class="event-time">7:30 PM</div>
+        <div class="event-dot food"></div>
+        <div class="event-card food">
+          <div class="event-label">Farewell Dinner</div>
+          <div class="event-title">Moeders</div>
+          <div class="event-detail">Traditional Dutch comfort food · Warm homey atmosphere · Stamppot · Perfect farewell Amsterdam dinner</div>
+          <a class="map-link" href="https://maps.app.goo.gl/MoedersAmsterdam" target="_blank">Moeders Amsterdam</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- DAY 11: JUL 28 -->
+  <div class="day-section" id="day-10">
+    <div class="day-header">
+      <div class="day-title">Tuesday, July 28</div>
+      <div class="day-location">Amsterdam → Zurich → Lucerne</div>
+      <div class="day-hotel">🏠 Radisson Blu Lucerne (3 nights)</div>
+    </div>
+    <div class="timeline">
+      <div class="event">
+        <div class="event-time">7:00 AM</div>
+        <div class="event-dot food"></div>
+        <div class="event-card food">
+          <div class="event-label">Breakfast ⭐ 4.6</div>
+          <div class="event-title">Omelegg City Centre</div>
+          <div class="event-detail">Nieuwebrugsteeg 24 · Opens 7 AM · Near Centraal Station · Leave by 7:45 AM for airport train</div>
+          <a class="map-link" href="https://maps.app.goo.gl/OmeleggCityCentre" target="_blank">Omelegg City Centre</a>
+        </div>
+      </div>
+      <div class="event">
+        <div class="event-time">7:45 AM</div>
+        <div class="event-dot transport"></div>
+        <div class="event-card transport">
+          <div class="event-label">Check-out + Airport Train</div>
+          <div class="event-title">Kimpton De Witt → Centraal → Schiphol</div>
+          <div class="event-detail">Airport train from Amsterdam Centraal · ~17 min to Schiphol Airport · Allow 45 min at airport</div>
+          <a class="map-link" href="https://maps.app.goo.gl/SchipholAirport" target="_blank">Amsterdam Schiphol Airport</a>
+        </div>
+      </div>
+      <div class="event">
+        <div class="event-time">9:50 AM</div>
+        <div class="event-dot flight"></div>
+        <div class="event-card flight">
+          <div class="event-label">Flight</div>
+          <div class="event-title">SWISS LX · AMS → ZRH</div>
+          <div class="event-detail">Nonstop · 1h25m · Arrives Zurich 11:15 AM</div>
+          <div class="event-conf">Ref: X7FSYU · €1,001.92 (5 pax)</div>
+        </div>
+      </div>
+      <div class="event">
+        <div class="event-time">11:15 AM</div>
+        <div class="event-dot transport"></div>
+        <div class="event-card transport">
+          <div class="event-label">Train</div>
+          <div class="event-title">Zürich Flughafen → Luzern</div>
+          <div class="event-detail">Direct train from airport · ~50 min · No booking needed · Tickets in Apple Wallet</div>
+          <div class="event-conf">Order #151448310029 · CHF 108.50 · 5 tickets</div>
+          <a class="map-link" href="https://maps.app.goo.gl/ZurichAirportTrain" target="_blank">Zürich Airport Train</a>
+        </div>
+      </div>
+      <div class="event">
+        <div class="event-time">1:00 PM</div>
+        <div class="event-dot hotel"></div>
+        <div class="event-card hotel">
+          <div class="event-label">Check-in</div>
+          <div class="event-title">Radisson Blu Lucerne</div>
+          <div class="event-detail">2 rooms incl. breakfast · 3 nights (Jul 28–31)</div>
+          <div class="event-conf">$3,403.52 total</div>
+          <a class="map-link" href="https://maps.app.goo.gl/RadissonLucerne" target="_blank">Radisson Blu Lucerne</a>
+        </div>
+      </div>
+      <div class="event">
+        <div class="event-time">3:00 PM</div>
+        <div class="event-dot activity"></div>
+        <div class="event-card activity">
+          <div class="event-label">Explore</div>
+          <div class="event-title">Lucerne Old Town + Lake Promenade</div>
+          <div class="event-detail">Chapel Bridge · Lion Monument · Lake Lucerne · First impressions of Switzerland</div>
+          <a class="map-link" href="https://maps.app.goo.gl/LucerneOldTown" target="_blank">Lucerne Old Town</a>
+        </div>
+      </div>
+      <div class="event">
+        <div class="event-time">7:30 PM</div>
+        <div class="event-dot food"></div>
+        <div class="event-card food">
+          <div class="event-label">Dinner</div>
+          <div class="event-title">Swiss Dinner in Lucerne</div>
+          <div class="event-detail">Try fondue or raclette · Traditional Swiss restaurant in the Old Town</div>
+          <a class="map-link" href="https://maps.app.goo.gl/LucerneOldTown" target="_blank">Lucerne Old Town</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- DAY 12: JUL 29 -->
+  <div class="day-section" id="day-11">
+    <div class="day-header">
+      <div class="day-title">Wednesday, July 29</div>
+      <div class="day-location">Mt. Pilatus — Lucerne</div>
+      <div class="day-hotel">🏠 Radisson Blu Lucerne</div>
+    </div>
+    <div class="timeline">
+      <div class="event">
+        <div class="event-time">8:00 AM</div>
+        <div class="event-dot food"></div>
+        <div class="event-card food">
+          <div class="event-label">Breakfast</div>
+          <div class="event-title">Radisson Blu Lucerne (included)</div>
+          <div class="event-detail">Early start · Mountain visibility best in the morning · Fuel up well</div>
+        </div>
+      </div>
+      <div class="event">
+        <div class="event-time">9:00 AM</div>
+        <div class="event-dot transport"></div>
+        <div class="event-card transport">
+          <div class="event-label">Boat</div>
+          <div class="event-title">Walk to Pier 2 · Bahnhofquai Lucerne</div>
+          <div class="event-detail">Boat departs 9:38 AM from Pier 2 · Bahnhofquai, 6002 Lucerne · ~1 hr ride to Alpnachstad across Lake Lucerne</div>
+          <div class="event-conf">📧 Golden Round Trip tickets sent to ovadent@yahoo.com · Order #1422628 · Scan QR code at turnstile — no need to stop at desk</div>
+          <a class="map-link" href="https://maps.google.com/?q=Pier+2+Bahnhofquai+Lucerne" target="_blank">Pier 2 Bahnhofquai Lucerne</a>
+        </div>
+      </div>
+      <div class="event">
+        <div class="event-time">~10:40 AM</div>
+        <div class="event-dot transport"></div>
+        <div class="event-card transport">
+          <div class="event-label">Arrive Alpnachstad</div>
+          <div class="event-title">Walk to Cogwheel Railway Station</div>
+          <div class="event-detail">Underground path connects boat landing to railway station · Very short walk · Must be at platform by 11:25 AM boarding time</div>
+        </div>
+      </div>
+      <div class="event">
+        <div class="event-time">11:25 AM</div>
+        <div class="event-dot warn"></div>
+        <div class="event-card warn">
+          <div class="event-label">⚠ Be at platform</div>
+          <div class="event-title">Cogwheel Train Boarding — Alpnachstad</div>
+          <div class="event-detail">Reservation for 11:40 AM departure · Must be at platform by 11:25 AM · Have QR code ready · Reservation cannot be exchanged or refunded</div>
+          <div class="event-conf">Reservation · Order #1422628 · CHF 25.00 · 5 people · Departure 11:40 AM</div>
+        </div>
+      </div>
+      <div class="event">
+        <div class="event-time">11:40 AM</div>
+        <div class="event-dot activity"></div>
+        <div class="event-card activity">
+          <div class="event-label">World's Steepest Cogwheel Railway</div>
+          <div class="event-title">Cogwheel Train Ascent to Pilatus Kulm</div>
+          <div class="event-detail">48% gradient · World's steepest cogwheel railway · Spectacular Alpine views all the way up · ~30 min to summit</div>
+        </div>
+      </div>
+      <div class="event">
+        <div class="event-time">~12:15 PM</div>
+        <div class="event-dot activity"></div>
+        <div class="event-card activity">
+          <div class="event-label">Summit 2132m</div>
+          <div class="event-title">Pilatus Kulm Summit Exploration</div>
+          <div class="event-detail">Panoramic views of 73 Alpine peaks · Observation deck · Walking trails to Esel + Oberhaupt viewpoints · Dragon legend · Allow 2–3 hrs</div>
+          <a class="map-link" href="https://maps.google.com/?q=Pilatus+Kulm+Switzerland" target="_blank">Pilatus Kulm Summit</a>
+        </div>
+      </div>
+      <div class="event">
+        <div class="event-time">1:00 PM</div>
+        <div class="event-dot food"></div>
+        <div class="event-card food">
+          <div class="event-label">Lunch at Summit</div>
+          <div class="event-title">Lunch at Pilatus Kulm Restaurant</div>
+          <div class="event-detail">Restaurant at the top · Swiss specialties · Spectacular views while you eat</div>
+        </div>
+      </div>
+      <div class="event">
+        <div class="event-time">2:30 PM</div>
+        <div class="event-dot transport"></div>
+        <div class="event-card transport">
+          <div class="event-label">Dragon Ride Cable Car</div>
+          <div class="event-title">Aerial Cableway Pilatus Kulm → Fräkmüntegg</div>
+          <div class="event-detail">Dragon Ride cable car · ~4 min descent · Stunning views · Then panorama gondolas down to Kriens</div>
+        </div>
+      </div>
+      <div class="event">
+        <div class="event-time">3:30 PM</div>
+        <div class="event-dot transport"></div>
+        <div class="event-card transport">
+          <div class="event-label">Bus</div>
+          <div class="event-title">Panorama Gondolas Kriens → Bus → Lucerne</div>
+          <div class="event-detail">Gondola to Kriens valley station · 5 min walk to bus stop · Bus back to Lucerne city centre</div>
+        </div>
+      </div>
+      <div class="event">
+        <div class="event-time">~4:30 PM</div>
+        <div class="event-dot hotel"></div>
+        <div class="event-card hotel">
+          <div class="event-label">Return</div>
+          <div class="event-title">Back at Radisson Blu Lucerne</div>
+          <div class="event-detail">Rest · Freshen up after mountain day</div>
+        </div>
+      </div>
+      <div class="event">
+        <div class="event-time">7:30 PM</div>
+        <div class="event-dot food"></div>
+        <div class="event-card food">
+          <div class="event-label">Dinner</div>
+          <div class="event-title">Swiss Dinner — Lucerne Old Town</div>
+          <div class="event-detail">Celebrate an incredible mountain day · Fondue · Raclette · Swiss specialties</div>
+          <a class="map-link" href="https://maps.app.goo.gl/LucerneOldTown" target="_blank">Lucerne Old Town</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- DAY 13: JUL 30 -->
+  <div class="day-section" id="day-12">
+    <div class="day-header">
+      <div class="day-title">Thursday, July 30</div>
+      <div class="day-location">Interlaken Day Trip — from Lucerne</div>
+      <div class="day-hotel">🏠 Radisson Blu Lucerne (returning for night)</div>
+    </div>
+    <div class="timeline">
+      <div class="event">
+        <div class="event-time">8:30 AM</div>
+        <div class="event-dot food"></div>
+        <div class="event-card food">
+          <div class="event-label">Breakfast</div>
+          <div class="event-title">Radisson Blu Lucerne (included)</div>
+          <div class="event-detail">Buffet breakfast · Before departing for Interlaken</div>
+        </div>
+      </div>
+      <div class="event">
+        <div class="event-time">9:06 AM</div>
+        <div class="event-dot transport"></div>
+        <div class="event-card transport">
+          <div class="event-label">Train</div>
+          <div class="event-title">Train Lucerne → Interlaken Ost (~1h50m)</div>
+          <div class="event-detail">Buy at station or SBB app on the day · No advance booking needed · Sit on right side of train for best views · Scenic panoramic route over Brünig Pass</div>
+          <a class="map-link" href="https://maps.app.goo.gl/LucerneStation" target="_blank">Lucerne Train Station</a>
+        </div>
+      </div>
+      <div class="event">
+        <div class="event-time">~10:55 AM</div>
+        <div class="event-dot activity"></div>
+        <div class="event-card activity">
+          <div class="event-label">Arrive</div>
+          <div class="event-title">Interlaken Ost · Höhematte Park</div>
+          <div class="event-detail">10 min walk to Höhematte · Large park in town center · Paragliders land here — kids will love watching · Direct Jungfrau, Eiger + Mönch views</div>
+          <a class="map-link" href="https://maps.google.com/?q=Höhematte+Interlaken" target="_blank">Höhematte Park Interlaken</a>
+        </div>
+      </div>
+      <div class="event">
+        <div class="event-time">1:00 PM</div>
+        <div class="event-dot food"></div>
+        <div class="event-card food">
+          <div class="event-label">Lunch</div>
+          <div class="event-title">Lunch in Interlaken</div>
+          <div class="event-detail">Many great options along Höheweg promenade · Try local Swiss food · Take your time</div>
+        </div>
+      </div>
+      <div class="event">
+        <div class="event-time">2:30 PM</div>
+        <div class="event-dot activity"></div>
+        <div class="event-card activity">
+          <div class="event-label">Explore</div>
+          <div class="event-title">Höheweg Promenade · Swiss Chocolate + Souvenirs</div>
+          <div class="event-detail">Browse Swiss chocolate shops · Souvenir shopping · Relax at a café · Enjoy the mountain views along the promenade</div>
+          <a class="map-link" href="https://maps.google.com/?q=Höheweg+Interlaken" target="_blank">Höheweg Interlaken</a>
+        </div>
+      </div>
+      <div class="event">
+        <div class="event-time">3:30 PM</div>
+        <div class="event-dot activity"></div>
+        <div class="event-card activity">
+          <div class="event-label">Free · Wildlife Park</div>
+          <div class="event-title">Alpine Wildlife Park</div>
+          <div class="event-detail">Free admission · Next to Harder Kulm funicular station · 5 min walk · Marmots, mountain goats, deer · Great for kids</div>
+          <a class="map-link" href="https://maps.google.com/?q=Wildlife+Park+Interlaken+Harderbahn" target="_blank">Interlaken Wildlife Park</a>
+        </div>
+      </div>
+      <div class="event">
+        <div class="event-time">4:15 PM</div>
+        <div class="event-dot transport"></div>
+        <div class="event-card transport">
+          <div class="event-label">Funicular</div>
+          <div class="event-title">Harder Kulm Funicular · Interlaken → Summit (10 min)</div>
+          <div class="event-detail">Valley station 5 min walk from Interlaken Ost · Runs every 30 min · Last ride down 9:40 PM — no rush</div>
+          <div class="event-conf">📱 Tickets in Apple Wallet · Order #1100202601080709 · $194.00 · 2A+3C</div>
+        </div>
+      </div>
+      <div class="event">
+        <div class="event-time">4:30 PM</div>
+        <div class="event-dot activity"></div>
+        <div class="event-card activity">
+          <div class="event-label">Summit ⭐ 4.6</div>
+          <div class="event-title">Two Lakes Bridge + Summit Exploration</div>
+          <div class="event-detail">Glass-floor viewing platform · Panoramic views of Lake Thun, Lake Brienz, Eiger, Mönch + Jungfrau · Short walk from mountain station</div>
+          <a class="map-link" href="https://maps.google.com/?cid=2773326863766513713" target="_blank">Harder Kulm Summit</a>
+        </div>
+      </div>
+      <div class="event">
+        <div class="event-time">5:00 PM</div>
+        <div class="event-dot food"></div>
+        <div class="event-card food">
+          <div class="event-label">Dinner ⭐ 4.6</div>
+          <div class="event-title">Harder Kulm Panoramic Restaurant</div>
+          <div class="event-detail">Dinner at the top · Views of both lakes + Jungfrau · Fondue · Cordon Bleu · One of the most spectacular restaurant settings in Switzerland</div>
+          <div class="event-conf">✅ No reservation needed — restaurant seats 260 · Just show up at 5:00 PM · Thursday early dinner = no wait</div>
+        </div>
+      </div>
+      <div class="event">
+        <div class="event-time">6:10 PM</div>
+        <div class="event-dot transport"></div>
+        <div class="event-card transport">
+          <div class="event-label">Funicular down</div>
+          <div class="event-title">Funicular down to Interlaken (10 min)</div>
+          <div class="event-detail">Then 5 min walk to Interlaken Ost station</div>
+        </div>
+      </div>
+      <div class="event">
+        <div class="event-time">7:04 PM</div>
+        <div class="event-dot transport"></div>
+        <div class="event-card transport">
+          <div class="event-label">Train</div>
+          <div class="event-title">Train Interlaken Ost → Lucerne (~1h50m)</div>
+          <div class="event-detail">Buy at station · No advance booking needed · Sit on right side of train · Arrive Lucerne ~8:54 PM</div>
+          <a class="map-link" href="https://maps.app.goo.gl/LucerneStation" target="_blank">Interlaken Ost Station</a>
+        </div>
+      </div>
+      <div class="event">
+        <div class="event-time">~8:54 PM</div>
+        <div class="event-dot hotel"></div>
+        <div class="event-card hotel">
+          <div class="event-label">Return</div>
+          <div class="event-title">Arrive Lucerne · Radisson Blu</div>
+          <div class="event-detail">Reasonable hour for the family · Good rest before Jul 31 checkout</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- DAY 14: JUL 31 -->
+  <div class="day-section" id="day-13">
+    <div class="day-header">
+      <div class="day-title">Friday, July 31</div>
+      <div class="day-location">Lucerne → Zurich Airport</div>
+      <div class="day-hotel">🏠 Hyatt Regency The Circle · Zurich Airport · #66222960 + #12614724</div>
+    </div>
+    <div class="timeline">
+      <div class="event">
+        <div class="event-time">8:00 AM</div>
+        <div class="event-dot food"></div>
+        <div class="event-card food">
+          <div class="event-label">Breakfast</div>
+          <div class="event-title">Radisson Blu Lucerne (included · last morning)</div>
+          <div class="event-detail">Included breakfast · Before checkout</div>
+        </div>
+      </div>
+      <div class="event">
+        <div class="event-time">9:30 AM</div>
+        <div class="event-dot activity"></div>
+        <div class="event-card activity">
+          <div class="event-label">Final Lucerne</div>
+          <div class="event-title">Chapel Bridge + Lake Promenade</div>
+          <div class="event-detail">Last walk through Lucerne · Chapel Bridge photos · Lake views · Souvenir shopping</div>
+          <a class="map-link" href="https://maps.app.goo.gl/ChapelBridgeLucerne" target="_blank">Chapel Bridge Lucerne</a>
+        </div>
+      </div>
+      <div class="event">
+        <div class="event-time">11:00 AM</div>
+        <div class="event-dot transport"></div>
+        <div class="event-card transport">
+          <div class="event-label">Check-out + Train</div>
+          <div class="event-title">Check out Radisson · Train Luzern → Zürich</div>
+          <div class="event-detail">Buy tickets at station or SBB app · No advance booking needed · ~50 min to Zurich HB · Then train to Zurich Airport</div>
+          <a class="map-link" href="https://maps.app.goo.gl/LucerneStation" target="_blank">Lucerne Train Station</a>
+        </div>
+      </div>
+      <div class="event">
+        <div class="event-time">1:00 PM</div>
+        <div class="event-dot activity"></div>
+        <div class="event-card activity">
+          <div class="event-label">Zurich</div>
+          <div class="event-title">Zurich Afternoon</div>
+          <div class="event-detail">Bahnhofstrasse · Old Town · Lake Zurich · Swiss shopping · Last Swiss experience</div>
+          <a class="map-link" href="https://maps.app.goo.gl/ZurichOldTown" target="_blank">Zurich Old Town</a>
+        </div>
+      </div>
+      <div class="event">
+        <div class="event-time">4:00 PM</div>
+        <div class="event-dot hotel"></div>
+        <div class="event-card hotel">
+          <div class="event-label">Check-in</div>
+          <div class="event-title">Hyatt Regency The Circle — Zurich Airport</div>
+          <div class="event-detail">Hotel attached directly to ZRH terminal · 1K (2A) + 1K Park View (1A+2C) · Last night of the trip</div>
+          <div class="event-conf">#66222960 + #12614724 · CHF 464.64 · 1 night</div>
+          <a class="map-link" href="https://maps.app.goo.gl/HyattTheCircle" target="_blank">Hyatt The Circle Zurich</a>
+        </div>
+      </div>
+      <div class="event">
+        <div class="event-time">7:00 PM</div>
+        <div class="event-dot food"></div>
+        <div class="event-card food">
+          <div class="event-label">Farewell Dinner</div>
+          <div class="event-title">Dinner at The Circle Complex</div>
+          <div class="event-detail">Multiple restaurants within The Circle · Relaxed last evening · Early night before departure</div>
+        </div>
+      </div>
+      <div class="event">
+        <div class="event-time">9:45 PM</div>
+        <div class="event-dot warn"></div>
+        <div class="event-card warn">
+          <div class="event-label">⚠ Action Required</div>
+          <div class="event-title">Select Return Seats — AA 201</div>
+          <div class="event-detail">Check in opens exactly 24 hrs before departure · Go to aa.com with ref GWKPMQ · Select 5 seats for ZRH→DFW tomorrow</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- DAY 15: AUG 1 -->
+  <div class="day-section" id="day-14">
+    <div class="day-header">
+      <div class="day-title">Saturday, August 1</div>
+      <div class="day-location">Zurich → Dallas, TX</div>
+      <div class="day-hotel">🏠 Heading home!</div>
+    </div>
+    <div class="timeline">
+      <div class="event">
+        <div class="event-time">6:00 AM</div>
+        <div class="event-dot food"></div>
+        <div class="event-card food">
+          <div class="event-label">Breakfast</div>
+          <div class="event-title">ZOOM Restaurant — The Circle</div>
+          <div class="event-detail">Opens 6 AM · In hotel complex · No travel needed · Quick walk to terminal after</div>
+          <a class="map-link" href="https://maps.app.goo.gl/HyattTheCircle" target="_blank">The Circle Zurich Airport</a>
+        </div>
+      </div>
+      <div class="event">
+        <div class="event-time">7:00 AM</div>
+        <div class="event-dot transport"></div>
+        <div class="event-card transport">
+          <div class="event-label">Check-out</div>
+          <div class="event-title">Check out · Walk to ZRH Terminal</div>
+          <div class="event-detail">Hotel is attached to airport · 5 min walk · Check in + Security · Allow 2.5 hrs before flight</div>
+          <a class="map-link" href="https://maps.app.goo.gl/ZurichAirport" target="_blank">Zurich Airport (ZRH)</a>
+        </div>
+      </div>
+      <div class="event">
+        <div class="event-time">9:45 AM</div>
+        <div class="event-dot flight"></div>
+        <div class="event-card flight">
+          <div class="event-label">Flight Home</div>
+          <div class="event-title">AA 201 · ZRH → DFW</div>
+          <div class="event-detail">Economy · Lunch + Snack served on board · Arrives Dallas 1:55 PM</div>
+          <div class="event-conf">Conf: GWKPMQ · ⚠ Seats TBD — select via aa.com night before</div>
+        </div>
+      </div>
+      <div class="event">
+        <div class="event-time">1:55 PM</div>
+        <div class="event-dot hotel"></div>
+        <div class="event-card activity">
+          <div class="event-label">Home!</div>
+          <div class="event-title">Arrive Dallas Fort Worth (DFW)</div>
+          <div class="event-detail">Welcome home! 🎉 14 days · 4 countries · 6 hotels · Memories for a lifetime</div>
+          <a class="map-link" href="https://maps.app.goo.gl/DFW" target="_blank">Dallas Fort Worth Airport</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+const days = [
+  {id:'day-0', tab:'Jul 18', sub:'Dallas'},
+  {id:'day-1', tab:'Jul 19', sub:'Frankfurt'},
+  {id:'day-2', tab:'Jul 20', sub:'Rhine'},
+  {id:'day-3', tab:'Jul 21', sub:'Cologne'},
+  {id:'day-4', tab:'Jul 22', sub:'→Bruges'},
+  {id:'day-5', tab:'Jul 23', sub:'Bruges'},
+  {id:'day-6', tab:'Jul 24', sub:'Ghent'},
+  {id:'day-7', tab:'Jul 25', sub:'→AMS'},
+  {id:'day-8', tab:'Jul 26', sub:'Amsterdam'},
+  {id:'day-9', tab:'Jul 27', sub:'Amsterdam'},
+  {id:'day-10', tab:'Jul 28', sub:'→Lucerne'},
+  {id:'day-11', tab:'Jul 29', sub:'Pilatus'},
+  {id:'day-12', tab:'Jul 30', sub:'Interlaken'},
+  {id:'day-13', tab:'Jul 31', sub:'→Zurich'},
+  {id:'day-14', tab:'Aug 1', sub:'→Dallas'},
+];
+
+const tabContainer = document.getElementById('dayTabs');
+let activeDay = 0;
+
+days.forEach((d, i) => {
+  const btn = document.createElement('div');
+  btn.className = 'day-tab' + (i === 0 ? ' active' : '');
+  btn.innerHTML = `<div>${d.tab}</div>`;
+  btn.onclick = () => switchDay(i);
+  tabContainer.appendChild(btn);
+});
+
+function switchDay(i) {
+  document.querySelectorAll('.day-section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.day-tab').forEach(t => t.classList.remove('active'));
+  document.getElementById(days[i].id).classList.add('active');
+  tabContainer.children[i].classList.add('active');
+  tabContainer.children[i].scrollIntoView({behavior:'smooth', block:'nearest', inline:'center'});
+  activeDay = i;
+  window.scrollTo({top: 0, behavior: 'smooth'});
+}
+
+// Show first day
+document.getElementById(days[0].id).classList.add('active');
+
+// Auto-jump to today's date if within trip
+const today = new Date();
+const tripStart = new Date('2026-07-18');
+const diff = Math.floor((today - tripStart) / (1000*60*60*24));
+if (diff >= 0 && diff < days.length) switchDay(diff);
+</script>
+
+</body>
+</html>
